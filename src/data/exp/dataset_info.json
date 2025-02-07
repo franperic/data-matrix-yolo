@@ -1,0 +1,36 @@
+{
+  "citation": "",
+  "description": "",
+  "features": {
+    "images": [
+      {
+        "bytes": {
+          "dtype": "binary",
+          "_type": "Value"
+        },
+        "path": {
+          "dtype": "null",
+          "_type": "Value"
+        }
+      }
+    ],
+    "texts": [
+      {
+        "assistant": {
+          "dtype": "string",
+          "_type": "Value"
+        },
+        "source": {
+          "dtype": "string",
+          "_type": "Value"
+        },
+        "user": {
+          "dtype": "string",
+          "_type": "Value"
+        }
+      }
+    ]
+  },
+  "homepage": "",
+  "license": ""
+}
