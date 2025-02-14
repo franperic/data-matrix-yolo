@@ -169,3 +169,13 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+.vscode/*
+data/*
+*.json
+*.jsonl
+*.jsonl.gz
+*.jsonl.tar.gz
+*.jsonl.tar.bz2
+*.jsonl.tar.xz
+*.jsonl.tar.zst

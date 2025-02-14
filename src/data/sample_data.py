@@ -1,75 +1,7 @@
-# import cv2
-# from scipy.ndimage import label
-# import numpy as np
-# from PIL import Image
-# import datasets
-# from datasets import load_dataset
-# import matplotlib.pyplot as plt
-
-# ds = load_dataset("HuggingFaceM4/Docmatix", "images", split=datasets.ReadInstruction("train", from_=0, to=10_000, unit="abs"))
-
-# check = next(iter(ds))
-# check["images"][0].show()
-
-# def filter_white_background(image):
-#     img_array = np.array(image)
-
-#     if len(img_array.shape) == 2:
-#         # Convert to grayscale
-#         intensity = img_array
-#     else:
-#         intensity = 0.299 * img_array[:, :, 0] + 0.587 * img_array[:, :, 1] + 0.114 * img_array[:, :, 2]
-
-#     # Calculate percentage of white pixels (threshold > 240)
-#     white_threshold = 240
-#     white_pixels = intensity > white_threshold
-#     white_ratio = np.sum(white_pixels) / white_pixels.size
-
-#     num_labels, labels = cv2.connectedComponents(white_pixels.astype(np.uint8))
-#     if num_labels > 1:
-#         label_sizes = np.bincount(labels.flatten())[1:]
-#         largest_region_ratio = np.max(label_sizes) / white_pixels.size
-#     else:
-#         largest_region_ratio = 0
-
-#     return white_ratio > 0.8 and largest_region_ratio > 0.6
-
-
-# for i in range(50):
-#     check = next(iter(ds))
-#     print(filter_white_background(check["images"][0]))
-
-
-# iter_ds = iter(ds)
-# for i in range(20):
-#     a = next(iter_ds)
-#     print(i)
-#     if not filter_white_background(a["images"][0]):
-#         break
-# a["images"][0].show()
-
-
-# from pylibdmtx.pylibdmtx import encode
-# import cv2
-# import numpy as np
-
-# def generate_datamatrix_image():
-#     encoded = encode('Sample text')
-#     # Convert to 3-channel array (RGB)
-#     img_array = np.frombuffer(encoded.pixels, dtype=np.uint8)
-#     img = img_array.reshape((encoded.height, encoded.width, 3))
-
-#     # Convert to grayscale if needed
-#     img_gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
-
-#     return img_gray
-
-
-# # To test it and save:
-# img = generate_datamatrix_image()
-# cv2.imwrite('datamatrix.png', img)
-
-from datasets import load_from_disk
+import os
+import random
+from huggingface_hub import login
+from datasets import load_from_disk, load_dataset, DatasetDict, Dataset
 from src.data.datamatrix import (
     DataMatrixGenerator,
     DataMatrixConfig,
@@ -77,21 +9,34 @@ from src.data.datamatrix import (
     create_hf_dataset,
 )
 
-ds = load_from_disk("src/data/exp")
+login()
+ds = load_dataset("HuggingFaceM4/Docmatix", "images", streaming=True)
 
-config = DataMatrixConfig(min_size=(40, 40), max_size=(80, 80))
-generator = SyntheticDatasetGenerator(config, base_dataset=ds)
+total_samples = 3600
+train_size = 3000
+val_size = 300
+test_size = 300
 
-samples = generator.generate_dataset(10)
+shuffled_ds = ds["train"].shuffle(seed=42)
+train_ds = shuffled_ds.take(train_size)
+val_ds = shuffled_ds.skip(train_size).take(val_size)
+test_ds = shuffled_ds.skip(train_size + val_size).take(test_size)
 
-samples[7][0].show()
+train_list = list(train_ds)
+val_list = list(val_ds)
+test_list = list(test_ds)
 
-# import itertools
-# from datasets import Dataset
 
-# subset_ds = itertools.islice(ds, 100)
-# ds_list = list(subset_ds)
+dataset = DatasetDict(
+    {
+        "train": Dataset.from_list(train_list),
+        "val": Dataset.from_list(val_list),
+        "test": Dataset.from_list(test_list),
+    }
+)
 
-# reg_dataset = Dataset.from_list(ds_list)
-# reg_dataset.save_to_disk("src/data/exp")
-# reg_dataset.to_parquet("src/data/exp.parquet")
+output_path = "data/docmatix_subset"
+os.makedirs(output_path, exist_ok=True)
+dataset.save_to_disk(output_path)
+
+dataset.push_to_hub("franperic/docmatix_subset", private=True, token=None)
