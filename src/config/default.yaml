@@ -1,0 +1,34 @@
+# YOLO DataMatrix Detection Training Configuration
+
+# Data settings
+data_dir: "/Users/franperic/projects/data-matrix-yolo-mcp/data/synth_datamatrix_docmatix_subset"
+data_format: "yolo"  # Options: yolo, coco, custom
+classes: ["DataMatrix"]
+
+# Model settings
+model_name: "yolov8n"  # Options: yolov8n, yolov8s, yolov8m, yolov8l, yolov8x
+model_weights: null  # Path to pre-trained weights or null for COCO pre-trained
+freeze_backbone: false
+
+# Training settings
+batch_size: 16
+img_size: 640
+epochs: 100
+patience: 10
+learning_rate: 0.001
+weight_decay: 0.0005
+momentum: 0.937
+use_augmentation: true
+use_mixed_precision: true
+num_workers: 4
+optimizer: "Adam"  # Options: Adam, SGD, AdamW
+scheduler: "onecycle"  # Options: onecycle, cosine, step, none
+
+# Output settings
+output_dir: "outputs"
+project_name: "datamatrix-detection"
+run_name: "yolov8n-datamatrix"
+
+# Logger settings
+use_ultralytics: true  # Set to false if ultralytics is not available
+use_wandb: false  # Set to true to use Weights & Biases logging
